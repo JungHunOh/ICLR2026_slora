@@ -32,6 +32,7 @@ def train(
         output_dir: str = "./lora-alpaca",
         adapter_name: str = "lora",
         sign_preserve : bool = False,
+        keep_lmc : bool = False,
         pissa_init : bool = False,
         load_8bit : bool = False,
         # training hyperparams
@@ -212,6 +213,7 @@ def train(
         task_type=TaskType.CAUSAL_LM,
         init_lora_weights=init_lora_weights,
         sign_preserve=sign_preserve,
+        keep_lmc=keep_lmc,
     )
 
     model = get_peft_model(model, config)

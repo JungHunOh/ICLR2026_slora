@@ -499,6 +499,9 @@ class LoraConfig(PeftConfig):
         default=False,
     )
 
+    keep_lmc: bool = field(
+        default=False,
+    )
 
     # Enables replicating layers in a model to expand it to a larger model.
     layer_replication: Optional[list[tuple[int, int]]] = field(

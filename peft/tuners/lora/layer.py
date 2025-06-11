@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import math
 import warnings
+import random
 from typing import Any, Optional, Union
 
 import torch
@@ -214,6 +215,8 @@ class LoraLayer(BaseTunerLayer):
 
         if use_rslora:
             self.scaling[adapter_name] = lora_alpha / math.sqrt(r)
+        elif isinstance(init_lora_weights, str) and init_lora_weights.startswith("pissa"):
+            self.scaling[adapter_name] = 1
         else:
             self.scaling[adapter_name] = lora_alpha / r
 
@@ -576,6 +579,7 @@ class Linear(nn.Module, LoraLayer):
         use_rslora: bool = False,
         use_dora: bool = False,
         sign_preserve: bool = False,
+        keep_lmc: bool = False,
         lora_bias: bool = False,
         **kwargs,
     ) -> None:
@@ -598,6 +602,10 @@ class Linear(nn.Module, LoraLayer):
         self.is_target_conv_1d_layer = is_target_conv_1d_layer
 
         self.sign_preserve = sign_preserve
+        self.keep_lmc = keep_lmc
+        self.iter = 0
+
+        assert not(sign_preserve and keep_lmc)
 
     def resolve_lora_variant(self, *, use_dora: bool, **kwargs) -> Optional[LoraVariant]:
         if not use_dora:
@@ -772,6 +780,10 @@ class Linear(nn.Module, LoraLayer):
                     lora_B = self.lora_B[active_adapter]
                     dropout = self.lora_dropout[active_adapter]
                     scaling = self.scaling[active_adapter]
+                    if self.keep_lmc:
+                        random.seed(self.iter)
+                        scaling = random.uniform(0,scaling)
+                        self.iter += 1
                     x = self._cast_input_dtype(x, lora_A.weight.dtype)
                     if active_adapter not in self.lora_variant:  # vanilla LoRA
                         result = result + lora_B(lora_A(dropout(x))) * scaling

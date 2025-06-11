@@ -201,6 +201,7 @@ class LoraModel(BaseTuner):
             "use_rslora": lora_config.use_rslora,
             "use_dora": lora_config.use_dora,
             "sign_preserve": lora_config.sign_preserve,
+            "keep_lmc": lora_config.keep_lmc,
             "ephemeral_gpu_offload": lora_config.runtime_config.ephemeral_gpu_offload,
             "lora_bias": lora_config.lora_bias,
             "loaded_in_8bit": getattr(self.model, "is_loaded_in_8bit", False),
