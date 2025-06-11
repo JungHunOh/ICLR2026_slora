@@ -19,9 +19,13 @@ lr= 0.0002
 if dataset == 'commonsense_170k':
     lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_*result.txt'))
     slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_*result.txt'))
+    plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_*result.txt'))
+    pslora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora+pissa_r{rank}_lr{lr}_*result.txt'))
 else:
     lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_*.txt'))
     slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_*.txt'))
+    plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_*.txt'))
+    pslora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora+pissa_r{rank}_lr{lr}_*.txt'))
 
 print(f'\n{model}_{dataset}_r{rank}_lr{lr}')
 
@@ -29,6 +33,8 @@ print("\n###########LoRA##########\n")
 
 lora_results = []
 slora_results = []
+plora_results = []
+pslora_results = []
 for i in range(len(lora)):
     l = open(lora[i], 'r')
     
@@ -56,3 +62,33 @@ for i in range(len(slora)):
     print(f'SLoRA: {slora_result}')
 
 print(f'AVG SLoRA: {sum(slora_results)/ len(slora_results)}')
+
+print("\n##########LoRA+PiSSA##########\n")
+
+for i in range(len(plora)):
+    sl = open(plora[i], 'r')
+    
+    print(plora[i].split('_')[-2])
+
+    slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
+    
+    plora_results.append(slora_result)
+
+    print(f'LoRA+PiSSA: {slora_result}')
+
+print(f'AVG LoRA+PiSSA: {sum(plora_results)/ len(plora_results)}')
+
+print("\n##########SLoRA+PiSSA##########\n")
+
+for i in range(len(pslora)):
+    sl = open(pslora[i], 'r')
+    
+    print(pslora[i].split('_')[-2])
+
+    slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
+    
+    pslora_results.append(slora_result)
+
+    print(f'SLoRA+PiSSA: {slora_result}')
+
+print(f'AVG SLoRA+PiSSA: {sum(pslora_results)/ len(pslora_results)}')
