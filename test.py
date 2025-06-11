@@ -12,7 +12,7 @@ model = 'llama'
 #dataset = 'math_10k'
 dataset = 'commonsense_170k'
 
-rank = 4
+rank = 64
 
 lr= 0.0002
 
@@ -33,25 +33,28 @@ else:
 
 print(f'\n{model}_{dataset}_r{rank}_lr{lr}')
 
-print("\n###########LoRA##########\n")
-
 lora_results = []
 slora_results = []
 plora_results = []
 pslora_results = []
 lmclora_results = []
-for i in range(len(lora)):
-    l = open(lora[i], 'r')
-    
-    print(lora[i].split('_')[-pos])
 
-    lora_result = round(float(l.readlines()[-1].split(' ')[-1]),3)
-    
-    lora_results.append(lora_result)
+try:
+    print("\n###########LoRA##########\n")
+    for i in range(len(lora)):
+        l = open(lora[i], 'r')
+        
+        print(lora[i].split('_')[-pos])
 
-    print(f'LoRA: {lora_result}')
+        lora_result = round(float(l.readlines()[-1].split(' ')[-1]),3)
+        
+        lora_results.append(lora_result)
 
-print(f'AVG LoRA: {sum(lora_results)/ len(lora_results)}')
+        print(f'LoRA: {lora_result}')
+
+    print(f'AVG LoRA: {sum(lora_results)/ len(lora_results)}')
+except:
+    pass
 
 # print("\n##########SLoRA##########\n")
 
@@ -68,20 +71,23 @@ print(f'AVG LoRA: {sum(lora_results)/ len(lora_results)}')
 
 # print(f'AVG SLoRA: {sum(slora_results)/ len(slora_results)}')
 
-print("\n##########LoRA+PiSSA##########\n")
+try:
+    print("\n##########LoRA+PiSSA##########\n")
 
-for i in range(len(plora)):
-    sl = open(plora[i], 'r')
-    
-    print(plora[i].split('_')[-pos])
+    for i in range(len(plora)):
+        sl = open(plora[i], 'r')
+        
+        print(plora[i].split('_')[-pos])
 
-    slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
-    
-    plora_results.append(slora_result)
+        slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
+        
+        plora_results.append(slora_result)
 
-    print(f'LoRA+PiSSA: {slora_result}')
+        print(f'LoRA+PiSSA: {slora_result}')
 
-print(f'AVG LoRA+PiSSA: {sum(plora_results)/ len(plora_results)}')
+    print(f'AVG LoRA+PiSSA: {sum(plora_results)/ len(plora_results)}')
+except:
+    pass
 
 # print("\n##########SLoRA+PiSSA##########\n")
 
@@ -98,17 +104,20 @@ print(f'AVG LoRA+PiSSA: {sum(plora_results)/ len(plora_results)}')
 
 # print(f'AVG SLoRA+PiSSA: {sum(pslora_results)/ len(pslora_results)}')
 
-print("\n##########LoRA LMC##########\n")
+try:
+    print("\n##########LoRA LMC##########\n")
 
-for i in range(len(lmclora)):
-    sl = open(lmclora[i], 'r')
-    
-    print(lmclora[i].split('_')[-pos])
+    for i in range(len(lmclora)):
+        sl = open(lmclora[i], 'r')
+        
+        print(lmclora[i].split('_')[-pos])
 
-    slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
-    
-    lmclora_results.append(slora_result)
+        slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
+        
+        lmclora_results.append(slora_result)
 
-    print(f'SLoRA+PiSSA: {slora_result}')
+        print(f'LoRA LMC: {slora_result}')
 
-print(f'AVG SLoRA+PiSSA: {sum(lmclora_results)/ len(lmclora_results)}')
+    print(f'AVG LoRA LMC: {sum(lmclora_results)/ len(lmclora_results)}')
+except:
+    pass
