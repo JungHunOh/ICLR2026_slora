@@ -15,20 +15,21 @@ dataset = 'commonsense_170k'
 rank = 64
 
 lr= 0.0002
+seed=1
 
 if dataset == 'commonsense_170k':
-    lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_*result.txt'))
-    #slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_*result.txt'))
-    plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_*result.txt'))
-    lmclora = sorted(glob.glob(f'./experiment/{model}_{dataset}_loralmc_r{rank}_lr{lr}_*result.txt'))
-    #pslora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora+pissa_r{rank}_lr{lr}_*result.txt'))
+    lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_seed{seed}seed{seed}*result.txt'))
+    #slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_seed{seed}*result.txt'))
+    plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_seed{seed}*result.txt'))
+    lmclora = sorted(glob.glob(f'./experiment/{model}_{dataset}_loralmc_r{rank}_lr{lr}_seed{seed}*result.txt'))
+    #pslora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora+pissa_r{rank}_lr{lr}_seed{seed}*result.txt'))
     pos = 2
 else:
-    lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_*.txt'))
-    #slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_*.txt'))
-    plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_*.txt'))
-    lmclora = sorted(glob.glob(f'./experiment/{model}_{dataset}_loralmc_r{rank}_lr{lr}_*.txt'))
-    #pslora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora+pissa_r{rank}_lr{lr}_*.txt'))
+    lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_seed{seed}*.txt'))
+    #slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_seed{seed}*.txt'))
+    plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_seed{seed}*.txt'))
+    lmclora = sorted(glob.glob(f'./experiment/{model}_{dataset}_loralmc_r{rank}_lr{lr}_seed{seed}*.txt'))
+    #pslora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora+pissa_r{rank}_lr{lr}_seed{seed}*.txt'))
     pos = 1
 
 print(f'\n{model}_{dataset}_r{rank}_lr{lr}')

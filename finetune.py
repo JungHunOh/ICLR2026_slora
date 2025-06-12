@@ -1,6 +1,8 @@
 import os
 import sys
 from typing import List
+import random
+import numpy as np
 
 import fire
 import torch
@@ -35,6 +37,7 @@ def train(
         keep_lmc : bool = False,
         pissa_init : bool = False,
         load_8bit : bool = False,
+        seed: int = 1,
         # training hyperparams
         batch_size: int = 128,
         micro_batch_size: int = 4,
@@ -111,6 +114,13 @@ def train(
         target_modules = ["q_proj", "k_proj", "v_proj", "fc_in", "fc_out"]
     elif base_model == 'yahma/llama-7b-hf':
         target_modules = ["q_proj", "k_proj", "v_proj", "up_proj", "down_proj"]
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+	# torch.backends.cudnn.deterministic = True
+	# torch.backends.cudnn.benchmark = False
 
     device_map = "auto"
     world_size = int(os.environ.get("WORLD_SIZE", 1))
