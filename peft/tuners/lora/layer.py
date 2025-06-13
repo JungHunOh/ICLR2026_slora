@@ -782,7 +782,9 @@ class Linear(nn.Module, LoraLayer):
                     scaling = self.scaling[active_adapter]
                     if self.keep_lmc:
                         random.seed(self.iter)
-                        scaling = random.uniform(0,scaling)
+                        #scaling = random.uniform(0,scaling)
+                        scaling = random.gauss(mu=scaling, sigma=1)
+                        scaling = max(min(scaling, scaling * 2 - 0.1), 0.1)
                         self.iter += 1
                     x = self._cast_input_dtype(x, lora_A.weight.dtype)
                     if active_adapter not in self.lora_variant:  # vanilla LoRA
