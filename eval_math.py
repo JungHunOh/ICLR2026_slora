@@ -2,10 +2,13 @@ import argparse
 import json
 import pdb
 import jsonlines
-
+import transformers
+import torch
 import util
-from vllm import LLM, SamplingParams
+import time
 import sys
+from datetime import timedelta
+
 MAX_INT = sys.maxsize
 INVALID_ANS = "[invalid]"
 
@@ -51,7 +54,33 @@ def batch_data(data_list, batch_size=1):
     batch_data.append(data_list[last_start:last_end])
     return batch_data
 
-def test_hendrycks_math(model, data_path, start=0, end=MAX_INT, batch_size=1, tensor_parallel_size=1):
+def smart_tokenizer_and_embedding_resize(
+    special_tokens_dict: dict,
+    tokenizer: transformers.PreTrainedTokenizer,
+    model: transformers.PreTrainedModel,
+):
+    num_new_tokens = tokenizer.add_special_tokens(special_tokens_dict)
+    model.resize_token_embeddings(len(tokenizer))
+
+    if num_new_tokens > 0:
+        input_embeddings = model.get_input_embeddings().weight.data
+        output_embeddings = model.get_output_embeddings().weight.data
+
+        input_embeddings_avg = input_embeddings[:-num_new_tokens].mean(dim=0, keepdim=True)
+        output_embeddings_avg = output_embeddings[:-num_new_tokens].mean(dim=0, keepdim=True)
+
+        input_embeddings[-num_new_tokens:] = input_embeddings_avg
+        output_embeddings[-num_new_tokens:] = output_embeddings_avg
+
+def truncate_at_stop_tokens(text, stop_tokens):
+    earliest_pos = len(text)
+    for token in stop_tokens:
+        pos = text.find(token)
+        if pos != -1 and pos < earliest_pos:
+            earliest_pos = pos
+    return text[:earliest_pos]
+
+def test_hendrycks_math(model_path, data_path, start=0, end=MAX_INT, batch_size=1, tensor_parallel_size=1):
     hendrycks_math_ins = []
     hendrycks_math_answers = []
     problem_prompt = (
@@ -75,30 +104,73 @@ def test_hendrycks_math(model, data_path, start=0, end=MAX_INT, batch_size=1, te
     batch_hendrycks_math_ins = batch_data(hendrycks_math_ins, batch_size=batch_size)
 
     stop_tokens = ["Question:", "Question", "USER:", "USER", "ASSISTANT:", "ASSISTANT", "Instruction:", "Instruction", "Response:", "Response"]
-    sampling_params = SamplingParams(temperature=0, top_p=1, max_tokens=2048, stop=stop_tokens)
-    print('sampleing =====', sampling_params)
-    llm = LLM(model=model,tensor_parallel_size=tensor_parallel_size)
-    res_completions = []
-    for idx, (prompt, prompt_answer) in enumerate(zip(batch_hendrycks_math_ins, hendrycks_math_answers)):
-        if isinstance(prompt, list):
-            pass
-        else:
-            prompt = [prompt]
-        completions = llm.generate(prompt, sampling_params)
-        for output in completions:
-            prompt_temp = output.prompt
-            generated_text = output.outputs[0].text
-            res_completions.append(generated_text)
+    
+    tokenizer = transformers.AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    model = transformers.AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, trust_remote_code=True)
 
+    if tokenizer.pad_token is None:
+        smart_tokenizer_and_embedding_resize(
+            special_tokens_dict=dict(pad_token="[PAD]"),
+            tokenizer=tokenizer,
+            model=model,
+        )
+
+    model.to("cuda")
+    model.eval()
+
+    total_batches = len(batch_hendrycks_math_ins)
+    start_time = time.time()
+
+    res_completions = []
+    for batch_idx, batch_prompts in enumerate(batch_hendrycks_math_ins):
+        # Tokenize and move inputs to device
+        inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True).to("cuda")
+
+        # Generate
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=512,
+                temperature=0.0,
+                do_sample=False,
+                eos_token_id=tokenizer.eos_token_id,
+                pad_token_id=tokenizer.pad_token_id,
+            )
+
+        # Decode and postprocess each output
+        for output in outputs:
+            gen_text = tokenizer.decode(output, skip_special_tokens=True)
+            #gen_text = truncate_at_stop_tokens(gen_text, stop_tokens)
+            res_completions.append(gen_text)
+
+        # Added: Print progress and estimated finish time
+        elapsed = time.time() - start_time
+        batches_left = total_batches - (batch_idx + 1)
+        est_remaining = (elapsed / (batch_idx + 1)) * batches_left
+        est_finish = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() + est_remaining))
+        print(f"[Batch {batch_idx+1}/{total_batches}] Elapsed: {timedelta(seconds=int(elapsed))}, Estimated finish: {est_finish}")
+    
     results = []
     for idx, (prompt, completion, prompt_answer) in enumerate(zip(hendrycks_math_ins, res_completions, hendrycks_math_answers)):
         res = process_results(prompt, completion, prompt_answer)
         results.append(res)
 
-    acc = sum(results) / len(results)
-    print('len invalid outputs ====', len(invalid_outputs), ', valid_outputs===', invalid_outputs)
-    print('start===', start, ', end====',end)
-    print('length====', len(results), ', acc====', acc)
+    correct_count = sum(results)
+    acc = correct_count / len(results)
+
+    # Added: Final summary print
+    print(f"\nFinal results:")
+    print(f"Number of correct answers: {correct_count}")
+    print(f"Accuracy: {acc:.4f}")
+    print(f"Number of invalid outputs: {len(invalid_outputs)}")
+
+    # Added: Save results to file
+    save_path = f"experiment/{model_path.split('/')[-2]}_math.txt"
+    with open(save_path, "w", encoding="utf-8") as f_out:
+        f_out.write(f"Number of correct answers: {correct_count}\n")
+        f_out.write(f"Accuracy: {acc:.4f}\n")
+        f_out.write(f"Number of invalid outputs: {len(invalid_outputs)}\n")
+    print(f"Results saved to {save_path}")
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -106,10 +178,9 @@ def parse_args():
     parser.add_argument("--data_file", type=str, default='')  # data path
     parser.add_argument("--start", type=int, default=0) #start index
     parser.add_argument("--end", type=int, default=MAX_INT)  # end index
-    parser.add_argument("--batch_size", type=int, default=400)  # batch_size
-    parser.add_argument("--tensor_parallel_size", type=int, default=8)  # tensor_parallel_size
+    parser.add_argument("--batch_size", type=int, default=1)  # batch_size
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_args()
-    test_hendrycks_math(model=args.model, data_path=args.data_file, start=args.start, end=args.end, batch_size=args.batch_size, tensor_parallel_size=args.tensor_parallel_size)
+    test_hendrycks_math(model_path=args.model, data_path=args.data_file, start=args.start, end=args.end, batch_size=args.batch_size)
