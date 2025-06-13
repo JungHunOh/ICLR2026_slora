@@ -50,8 +50,8 @@ def train(
         save_step: int = 200,
         # lora hyperparams
         lora_r: int = 8,
-        lora_alpha: int = 16,
-        lora_dropout: float = 0,
+        lora_alpha: float = 16,
+        lora_dropout: float = 0.05,
         lora_target_modules: List[str] = None,
         # bottleneck adapter hyperparams
         bottleneck_size: int = 256,
@@ -112,7 +112,7 @@ def train(
 
     if base_model == 'EleutherAI/gpt-j-6b':
         target_modules = ["q_proj", "k_proj", "v_proj", "fc_in", "fc_out"]
-    elif base_model == 'yahma/llama-7b-hf':
+    elif 'llama' in base_model:
         target_modules = ["q_proj", "k_proj", "v_proj", "up_proj", "down_proj"]
 
     random.seed(seed)
@@ -318,7 +318,7 @@ def train(
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
 
-    trainer.train(resume_from_checkpoint=resume_from_checkpoint)
+    #trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     model = model.merge_and_unload()
 

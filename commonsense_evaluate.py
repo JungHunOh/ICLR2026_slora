@@ -171,7 +171,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', choices=["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa"],
                         required=True)
-    parser.add_argument('--model', choices=['LLaMA-7B', "LLaMA-13B",'BLOOM-7B', 'GPT-j-6B'], required=True)
+    parser.add_argument('--model', choices=['LLaMA-7B', "LLaMA-13B", "LLaMA3-8B",'BLOOM-7B', 'GPT-j-6B'], required=True)
     parser.add_argument('--adapter', choices=['LoRA', 'AdapterP', 'AdapterH', 'Parallel'],
                         required=True)
     parser.add_argument('--base_model', required=True)
@@ -199,7 +199,8 @@ def load_model(args) -> tuple:
         raise ValueError(f'can not find lora weight, the value is: {lora_weights}')
 
     load_8bit = args.load_8bit
-    if "LLaMA" in args.model:
+    
+    if "LLaMA" in args.model and "LLaMA3" not in args.model:
         tokenizer = LlamaTokenizer.from_pretrained(base_model)
     else:
         tokenizer = AutoTokenizer.from_pretrained(base_model)

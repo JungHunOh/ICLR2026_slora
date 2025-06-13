@@ -1,0 +1,8 @@
+1. python=3.12.9
+2. conda previous
+3. pip install sentenpiece
+4. pip install following pkgs
+accelerate
+datasets
+fire
+transformers
