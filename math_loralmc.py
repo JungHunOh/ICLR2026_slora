@@ -27,7 +27,7 @@ for seed in [1]:
                 --data_length 10000000 \
                 --bf16 True \
                 --output_dir ./trained_models/{model}_metamath_loralmc_r{r}_lr{lr}_seed{seed}/\
-                --per_device_train_batch_size 4 \
+                --per_device_train_batch_size 8 \
                 --per_device_eval_batch_size 4 \
                 --gradient_accumulation_steps 4 \
                 --evaluation_strategy "no" \

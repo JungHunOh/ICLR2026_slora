@@ -72,9 +72,5 @@ class SignPreservingAdamW(torch.optim.AdamW):
                     # Update W: preserve original sign, adopt W_eff's magnitude
                     same_sign = (module.initial_sign == (W_eff >= 0))
                     
-                    if i == 10:
-                        print(same_sign.float().mean())
-                    i += 1
-
                     W_new = torch.where(same_sign, W, W + torch.sign(-W_eff) * torch.abs(W_eff))
                     module.base_layer.weight.data = W_new

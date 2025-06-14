@@ -27,7 +27,7 @@ for seed in [1]:
                 --data_length 10000000 \
                 --bf16 True \
                 --output_dir ./trained_models/{model}_metamath_slora_r{r}_lr{lr}_seed{seed}/\
-                --per_device_train_batch_size 4 \
+                --per_device_train_batch_size 8 \
                 --per_device_eval_batch_size 4 \
                 --gradient_accumulation_steps 4 \
                 --evaluation_strategy "no" \
@@ -43,7 +43,7 @@ for seed in [1]:
                 --lora_alpha {r*2}\
                 --seed {seed}\
                 --lora_dropout 0\
-                --sign_preserve
+                --sign_preserve\
                 ')
 
             os.system(f'CUDA_VISIBLE_DEVICES={gpu} python eval_gsm8k.py --model ./trained_models/{model}_metamath_slora_r{r}_lr{lr}_seed{seed}/ --data_file ./dataset/GSM8K_test.jsonl')
