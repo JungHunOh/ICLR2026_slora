@@ -223,7 +223,7 @@ class LoraLayer(BaseTunerLayer):
         self.use_dora[adapter_name] = use_dora
 
         if sign_preserve:
-            self.initial_sign = torch.sign(self.base_layer.weight)
+            self.initial_sign = (self.base_layer.weight >= 0).cuda()
 
         # for inits that require access to the base weight, use gather_param_ctx so that the weight is gathered when using DeepSpeed
         if isinstance(init_lora_weights, str) and init_lora_weights.startswith("pissa"):
@@ -642,7 +642,8 @@ class Linear(nn.Module, LoraLayer):
                     orig_weight = base_layer.weight.data.clone()
                     orig_dtype = orig_weight.dtype
                     if active_adapter not in self.lora_variant:  # vanilla LoRA
-                        if self.sign_preserve:
+                        #if self.sign_preserve:
+                        if False:
                             matmul_output = torch.mm(self.lora_B[active_adapter].weight, self.lora_A[active_adapter].weight)
                             orig_weight = orig_weight + transpose(matmul_output.to(orig_dtype), self.fan_in_fan_out) * self.scaling[active_adapter]
                             orig_weight = abs(orig_weight) * self.initial_sign
@@ -669,7 +670,8 @@ class Linear(nn.Module, LoraLayer):
 
                 else:
                     if active_adapter not in self.lora_variant:  # vanilla LoRA
-                        if self.sign_preserve:
+                        #if self.sign_preserve:
+                        if False:
                             orig_weight = base_layer.weight.data.clone()
                             orig_dtype = orig_weight.dtype
                             matmul_output = torch.mm(self.lora_B[active_adapter].weight, self.lora_A[active_adapter].weight)
@@ -755,7 +757,8 @@ class Linear(nn.Module, LoraLayer):
         elif self.merged:
             result = self.base_layer(x, *args, **kwargs)
         else:
-            if self.sign_preserve:
+            #if self.sign_preserve:
+            if False:
                 torch_result_dtype = self.base_layer.weight.dtype
 
                 lora_A_keys = self.lora_A.keys()

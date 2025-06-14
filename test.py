@@ -7,18 +7,22 @@ import glob
 #slora = sorted(glob.glob('./experiment/gptj-6b-slora-math-all-r32_*.txt'))
 
 #model = 'gpt'
-model = 'llama'
+model = 'llama3'
 
-#dataset = 'math_10k'
-dataset = 'commonsense_170k'
+dataset = 'metamath'
+#dataset = 'commonsense_170k'
 
-rank = 64
+rank = 128
 
 lr= 0.0002
 seed=1
 
+pos2 = 1
+if dataset == 'metamath':
+    pos2 = 2
+
 if dataset == 'commonsense_170k':
-    lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_seed{seed}seed{seed}*result.txt'))
+    lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_seed{seed}*result.txt'))
     #slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_seed{seed}*result.txt'))
     plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_seed{seed}*result.txt'))
     lmclora = sorted(glob.glob(f'./experiment/{model}_{dataset}_loralmc_r{rank}_lr{lr}_seed{seed}*result.txt'))
@@ -47,7 +51,7 @@ try:
         
         print(lora[i].split('_')[-pos])
 
-        lora_result = round(float(l.readlines()[-1].split(' ')[-1]),3)
+        lora_result = round(float(l.readlines()[-pos2].split(' ')[-1]),3)
         
         lora_results.append(lora_result)
 
@@ -64,7 +68,7 @@ except:
     
 #     print(slora[i].split('_')[-pos])
 
-#     slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
+#     slora_result = round(float(sl.readlines()[-pos2].split(' ')[-1]),3)
     
 #     slora_results.append(slora_result)
 
@@ -80,7 +84,7 @@ try:
         
         print(plora[i].split('_')[-pos])
 
-        slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
+        slora_result = round(float(sl.readlines()[-pos2].split(' ')[-1]),3)
         
         plora_results.append(slora_result)
 
@@ -97,7 +101,7 @@ except:
     
 #     print(pslora[i].split('_')[-pos])
 
-#     slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
+#     slora_result = round(float(sl.readlines()[-pos2].split(' ')[-1]),3)
     
 #     pslora_results.append(slora_result)
 
@@ -113,7 +117,7 @@ try:
         
         print(lmclora[i].split('_')[-pos])
 
-        slora_result = round(float(sl.readlines()[-1].split(' ')[-1]),3)
+        slora_result = round(float(sl.readlines()[-pos2].split(' ')[-1]),3)
         
         lmclora_results.append(slora_result)
 

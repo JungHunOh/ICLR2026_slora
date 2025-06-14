@@ -10,7 +10,7 @@ dataset='commonsense_170k'
 #model='llama'
 model='llama3'
 
-lr=1e-4
+lr=2e-4
 r=32
 seed=1
 
@@ -22,7 +22,7 @@ elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
 # math
-os.system(f'CUDA_VISIBLE_DEVICES={gpu} python finetune.py --base_model {base_model} --data_path ./ft-training_set/{dataset}.json --output_dir ./trained_models/{model}_{dataset}_loralmc_r{r}_lr{lr}_seed{seed}/ --batch_size 16 --micro_batch_size 16   --num_epochs 3   --learning_rate {lr}   --cutoff_len 256   --val_set_size 0 --eval_step 80 --save_step 80  --adapter_name lora --lora_r {r} --lora_alpha {r*2*1.6} --keep_lmc --seed {seed}')
+os.system(f'CUDA_VISIBLE_DEVICES={gpu} python finetune.py --base_model {base_model} --data_path ./ft-training_set/{dataset}.json --output_dir ./trained_models/{model}_{dataset}_loralmc_r{r}_lr{lr}_seed{seed}/ --batch_size 16 --micro_batch_size 16   --num_epochs 3   --learning_rate {lr}   --cutoff_len 256   --val_set_size 0 --eval_step 80 --save_step 80  --adapter_name lora --lora_r {r} --lora_alpha {r*2*1.6} --keep_lmc --seed {seed} --dropout 0')
 
 if dataset == 'commonsense_170k':
     evalsets = ["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa"]

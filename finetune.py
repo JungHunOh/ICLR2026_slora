@@ -23,6 +23,7 @@ from peft import (  # noqa: E402
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
     set_peft_model_state_dict,
+    SignPreservingLoRATrainer
 )
 from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, AutoModel  # noqa: F402
 
@@ -279,7 +280,12 @@ def train(
         model.is_parallelizable = True
         model.model_parallel = True
 
-    trainer = transformers.Trainer(
+    if sign_preserve:
+        Trainer = SignPreservingLoRATrainer
+    else: 
+        Trainer = transformers.Trainer
+
+    trainer = Trainer(
         model=model,
         train_dataset=train_data,
         eval_dataset=val_data,

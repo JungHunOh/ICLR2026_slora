@@ -9,7 +9,6 @@ import torch
 import numpy as np
 import transformers
 from torch.utils.data import Dataset
-from transformers import Trainer
 import argparse
 import json
 import random
@@ -23,6 +22,7 @@ from peft import (  # noqa: E402
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
     set_peft_model_state_dict,
+    SignPreservingLoRATrainer
 )
 
 def _make_r_io_base(f, mode: str):
@@ -70,6 +70,7 @@ class LoRAArguments:
     lora_alpha: float = field(default=None)
     pissa_init: bool = field(default=False)
     keep_lmc: bool = field(default=False)
+    sign_preserve: bool = field(default=False)
     lora_dropout: float = field(default=0.05)
     target_modules: List[str] = field(default_factory=lambda: ["q_proj", "v_proj"])
 
@@ -282,6 +283,7 @@ def train():
         task_type=TaskType.CAUSAL_LM,
         init_lora_weights=init_lora_weights,
         keep_lmc=lora_args.keep_lmc,
+        sign_preserve=lora_args.sign_preserve,
     )
 
     model = get_peft_model(model, config)
@@ -310,6 +312,11 @@ def train():
     #     )
     
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
+
+    if sign_preserve:
+        Trainer = SignPreservingLoRATrainer
+    else: 
+        Trainer = transformers.Trainer
 
     trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
 

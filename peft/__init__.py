@@ -114,6 +114,7 @@ from .utils import (
     shift_tokens_right,
 )
 
+from .trainer import SignPreservingLoRATrainer
 
 __all__ = [
     "MODEL_TYPE_TO_PEFT_MODEL_MAPPING",
