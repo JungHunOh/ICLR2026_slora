@@ -177,6 +177,8 @@ experiment
 
 trained_models
 
+*.csv
+
 #dataset
 
 #ft-training_set

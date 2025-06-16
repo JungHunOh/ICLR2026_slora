@@ -39,6 +39,7 @@ def train(
         pissa_init : bool = False,
         load_8bit : bool = False,
         seed: int = 1,
+        data_length: int = 1000000,
         # training hyperparams
         batch_size: int = 128,
         micro_batch_size: int = 4,
@@ -260,6 +261,10 @@ def train(
             print(f"Checkpoint {checkpoint_name} not found")
 
     model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
+    
+    if data_length < len(data['train']):
+        print("Train using a part of dataset")
+        data['train'] = data['train'].shuffle().select(range(data_length))
 
     if val_set_size > 0:
         train_val = data["train"].train_test_split(
