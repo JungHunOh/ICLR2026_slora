@@ -18,11 +18,11 @@ elif model == 'llama':
 elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
-for seed in [1]:
+for seed in [1,2,3]:
     for r in [8,32,128]:
-        for dl, bs, epoch in [(100,8,20),(100,8,10), (500,16,10),(1000,16,5),(5000,16,5)]:
-        #for dl, bs, epoch in [(1000,16,5),(5000,16,5)]:
-            for lr in [5e-4, 2e-4]:
+        for dl, bs, epoch in [(32,8,10),(32,8,5),(100,8,5)]:
+        #for dl, bs, epoch in [(500,16,5),(500,8,5)]:
+            for lr in [2e-4, 1e-4]:
                 # os.system(f'CUDA_VISIBLE_DEVICES={gpu} python3 -m torch.distributed.launch --master_addr localhost --master_port 1231 --nproc_per_node=4 --use_env train_math.py \
                 #     --model_name_or_path {base_model}\
                 #     --data_path ft-training_set/MetaMathQA-40K.json \
