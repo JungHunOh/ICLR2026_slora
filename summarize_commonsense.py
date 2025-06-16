@@ -41,7 +41,7 @@ for filename in os.listdir(experiment_dir):
             continue
 
 # Write averaged results to CSV
-output_csv = 'summary.csv'
+output_csv = 'summary_commonsense.csv'
 with open(output_csv, 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow(['dl', 'bs', 'epoch', 'r', 'lora', 'slora', 'improvement'])
@@ -67,3 +67,22 @@ with open(output_csv, 'w', newline='') as f:
         except:
             pass
 
+import csv
+from tabulate import tabulate
+
+csv_file = 'summary_commonsense.csv'
+output_file = 'summary_commonsense.txt'
+
+# Read CSV
+with open(csv_file, newline='') as f:
+    reader = csv.reader(f)
+    rows = list(reader)
+
+# Format table
+table_str = tabulate(rows[1:], headers=rows[0], tablefmt='github')
+
+# Save to file
+with open(output_file, 'w') as f:
+    f.write(table_str)
+
+print(f"Table saved to {output_file}")
