@@ -9,10 +9,10 @@ import glob
 #model = 'gpt'
 model = 'llama3'
 
-dataset = 'metamath'
-#dataset = 'commonsense_170k'
+#dataset = 'metamath'
+dataset = 'commonsense_170k'
 
-rank = 128
+rank = 8
 
 lr= 0.0002
 seed=1
@@ -23,15 +23,15 @@ if dataset == 'metamath':
 
 if dataset == 'commonsense_170k':
     lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_seed{seed}*result.txt'))
-    #slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_seed{seed}*result.txt'))
-    plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_seed{seed}*result.txt'))
+    slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_seed{seed}*result.txt'))
+    #plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_seed{seed}*result.txt'))
     lmclora = sorted(glob.glob(f'./experiment/{model}_{dataset}_loralmc_r{rank}_lr{lr}_seed{seed}*result.txt'))
     #pslora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora+pissa_r{rank}_lr{lr}_seed{seed}*result.txt'))
     pos = 2
 else:
     lora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora_r{rank}_lr{lr}_seed{seed}*.txt'))
-    #slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_seed{seed}*.txt'))
-    plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_seed{seed}*.txt'))
+    slora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora_r{rank}_lr{lr}_seed{seed}*.txt'))
+    #plora = sorted(glob.glob(f'./experiment/{model}_{dataset}_lora+pissa_r{rank}_lr{lr}_seed{seed}*.txt'))
     lmclora = sorted(glob.glob(f'./experiment/{model}_{dataset}_loralmc_r{rank}_lr{lr}_seed{seed}*.txt'))
     #pslora = sorted(glob.glob(f'./experiment/{model}_{dataset}_slora+pissa_r{rank}_lr{lr}_seed{seed}*.txt'))
     pos = 1
@@ -61,20 +61,23 @@ try:
 except:
     pass
 
-# print("\n##########SLoRA##########\n")
+try:
+    print("\n##########SLoRA##########\n")
 
-# for i in range(len(slora)):
-#     sl = open(slora[i], 'r')
-    
-#     print(slora[i].split('_')[-pos])
+    for i in range(len(slora)):
+        sl = open(slora[i], 'r')
+        
+        print(slora[i].split('_')[-pos])
 
-#     slora_result = round(float(sl.readlines()[-pos2].split(' ')[-1]),3)
-    
-#     slora_results.append(slora_result)
+        slora_result = round(float(sl.readlines()[-pos2].split(' ')[-1]),3)
+        
+        slora_results.append(slora_result)
 
-#     print(f'SLoRA: {slora_result}')
+        print(f'SLoRA: {slora_result}')
 
-# print(f'AVG SLoRA: {sum(slora_results)/ len(slora_results)}')
+    print(f'AVG SLoRA: {sum(slora_results)/ len(slora_results)}')
+except:
+    pass
 
 try:
     print("\n##########LoRA+PiSSA##########\n")

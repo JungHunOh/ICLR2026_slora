@@ -314,6 +314,7 @@ def train():
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
 
     if lora_args.sign_preserve:
+    #if False:
         Trainer = SignPreservingLoRATrainer
     else: 
         Trainer = transformers.Trainer

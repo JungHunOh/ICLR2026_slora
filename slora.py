@@ -22,8 +22,8 @@ elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
 for seed in [1]:
-    for r in [8,32,128]:
-        for lr in [1e-4]:
+    for r in [32]:
+        for lr in [2e-4]:
             # math
             os.system(f'CUDA_VISIBLE_DEVICES={gpu} python finetune.py --base_model {base_model} --data_path ./ft-training_set/{dataset}.json --output_dir ./trained_models/{model}_{dataset}_slora_r{r}_lr{lr}_seed{seed}/ --batch_size 16 --micro_batch_size 16   --num_epochs 3   --learning_rate {lr}   --cutoff_len 256   --val_set_size 0 --eval_step 80 --save_step 80  --adapter_name lora --lora_r {r} --lora_alpha {r*2} --seed {seed} --dropout 0 --sign_preserve')
 

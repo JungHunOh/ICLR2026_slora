@@ -51,7 +51,7 @@ class SignPreservingAdamW(torch.optim.AdamW):
     def step(self, closure=None):
         loss = super().step(closure)
         self._step_count += 1
-        if self._step_count % 5 == 0:
+        if self._step_count % 1 == 0:
             self.sign_preserve_fn(self.model)
         return loss
     
@@ -72,5 +72,5 @@ class SignPreservingAdamW(torch.optim.AdamW):
                     # Update W: preserve original sign, adopt W_eff's magnitude
                     same_sign = (module.initial_sign == (W_eff >= 0))
                     
-                    W_new = torch.where(same_sign, W, W + torch.sign(-W_eff) * torch.abs(W_eff))
+                    W_new = torch.where(same_sign, W, W - 2 * W_eff)
                     module.base_layer.weight.data = W_new

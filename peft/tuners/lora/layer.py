@@ -224,6 +224,7 @@ class LoraLayer(BaseTunerLayer):
 
         if sign_preserve:
             self.initial_sign = (self.base_layer.weight >= 0).cuda()
+            #self.initial_sign = torch.sign(self.base_layer.weight).to(torch.int8).cpu()
 
         # for inits that require access to the base weight, use gather_param_ctx so that the weight is gathered when using DeepSpeed
         if isinstance(init_lora_weights, str) and init_lora_weights.startswith("pissa"):
@@ -646,7 +647,7 @@ class Linear(nn.Module, LoraLayer):
                         if False:
                             matmul_output = torch.mm(self.lora_B[active_adapter].weight, self.lora_A[active_adapter].weight)
                             orig_weight = orig_weight + transpose(matmul_output.to(orig_dtype), self.fan_in_fan_out) * self.scaling[active_adapter]
-                            orig_weight = abs(orig_weight) * self.initial_sign
+                            orig_weight = abs(orig_weight) * self.initial_sign.cuda()
                         else:
                             delta_weight = self.get_delta_weight(active_adapter)
                             orig_weight += delta_weight.to(orig_dtype)
@@ -676,7 +677,8 @@ class Linear(nn.Module, LoraLayer):
                             orig_dtype = orig_weight.dtype
                             matmul_output = torch.mm(self.lora_B[active_adapter].weight, self.lora_A[active_adapter].weight)
                             orig_weight = orig_weight + transpose(matmul_output.to(orig_dtype), self.fan_in_fan_out) * self.scaling[active_adapter]
-                            base_layer.weight.data = abs(orig_weight) * self.initial_sign
+                            base_layer.weight.data = abs(orig_weight) * self.initial_sign.cuda()
+                            base_layer.weight.data = orig_weight
                         else:
                             delta_weight = self.get_delta_weight(active_adapter)
                             base_layer.weight.data += delta_weight
@@ -768,7 +770,7 @@ class Linear(nn.Module, LoraLayer):
 
                     matmul_output = torch.mm(self.lora_B[active_adapter].weight, self.lora_A[active_adapter].weight)
                     effective_w = self.base_layer.weight + transpose(matmul_output.to(torch_result_dtype), self.fan_in_fan_out) * self.scaling[active_adapter]
-                    effective_w = abs(effective_w) * self.initial_sign
+                    effective_w = abs(effective_w) * self.initial_sign.cuda()
                     result = F.linear(x, transpose(effective_w, self.fan_in_fan_out), bias=self.bias)
             else:
                 result = self.base_layer(x, *args, **kwargs)

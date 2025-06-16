@@ -110,7 +110,7 @@ def main(
         pbar.update(1)
     pbar.close()
     with open(f'experiment/{save_name}_{args.dataset}_result.txt', 'w+') as f:
-        f.write(f'\rtest:{idx + 1}/{total} | accuracy {correct}  {correct / (idx + 1)}')
+        f.write(f'\rtest:{idx + 1}/{total} | accuracy {correct}  {correct / (current)}')
     print('\n')
     print('test finished')
 
@@ -176,7 +176,7 @@ def parse_args():
                         required=True)
     parser.add_argument('--base_model', required=True)
     parser.add_argument('--lora_weights', required=True)
-    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=100)
     parser.add_argument('--load_8bit', action='store_true', default=False)
 
     return parser.parse_args()

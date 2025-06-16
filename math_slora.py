@@ -18,10 +18,10 @@ elif model == 'llama':
 elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
-for seed in [1]:
-    for r in [8,32,128]:
+for seed in [2]:
+    for r in [32]:
         for lr in [2e-4]:
-            os.system(f'CUDA_VISIBLE_DEVICES={gpu} python3 -m torch.distributed.launch --master_addr localhost --master_port 1234 --nproc_per_node=4 --use_env train_math.py \
+            os.system(f'CUDA_VISIBLE_DEVICES={gpu} python train_math.py \
                 --model_name_or_path {base_model}\
                 --data_path ft-training_set/MetaMathQA-40K.json \
                 --data_length 10000000 \
