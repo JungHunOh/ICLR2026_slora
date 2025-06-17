@@ -9,6 +9,8 @@ import fire
 
 import torch
 
+import ast
+
 sys.path.append(os.path.join(os.getcwd(), "peft/src/"))
 from peft import PeftModel
 from tqdm import tqdm
@@ -68,51 +70,55 @@ def main(
         print(outputs)
         return outputs
 
-    save_name=args.lora_weights.replace('./trained_models/','')
-    save_file = f'experiment/{save_name}_{args.dataset}.json'
-    create_dir('experiment/')
+    args.datasets = ast.literal_eval(args.datasets)
 
-    dataset = load_data(args)
-    batches = create_batch(dataset, args.batch_size)
     tokenizer, model = load_model(args)
-    total = len(batches)
-    correct = 0
-    current = 0
-    output_data = []
-    pbar = tqdm(total=total)
-    for idx, batch in enumerate(batches):
-        current += len(batch)
-        instructions = [data.get('instruction') for data in batch]
 
-        outputs = evaluate(instructions)
+    for ds in args.datasets:
+        save_name=args.lora_weights.replace('./trained_models/','')
+        save_file = f'experiment/{save_name}_{ds}.json'
+        create_dir('experiment/')
 
-        for data, output in zip(batch, outputs):
-            label = data.get('answer')
-            flag = False
-            predict = extract_answer(args, output)
-            if label == predict:
-                correct += 1
-                flag = True
-            new_data = copy.deepcopy(data)
-            new_data['output_pred'] = output
-            new_data['pred'] = predict
-            new_data['flag'] = flag
-            output_data.append(new_data)
-            print(data["instruction"])
-            print(output)
-            print('prediction:', predict)
-            print('label:', label)
-        print('---------------')
-        print(f'\rtest:{idx + 1}/{total} | accuracy {correct}  {correct / current}')
-        print('---------------')
-        with open(f'experiment/{save_name}_{args.dataset}.txt', 'w+') as f:
-            json.dump(output_data, f, indent=4)
-        pbar.update(1)
-    pbar.close()
-    with open(f'experiment/{save_name}_{args.dataset}_result.txt', 'w+') as f:
-        f.write(f'\rtest:{idx + 1}/{total} | accuracy {correct}  {correct / (current)}')
-    print('\n')
-    print('test finished')
+        dataset = load_data(args)
+        batches = create_batch(dataset, args.batch_size)
+        total = len(batches)
+        correct = 0
+        current = 0
+        output_data = []
+        pbar = tqdm(total=total)
+        for idx, batch in enumerate(batches):
+            current += len(batch)
+            instructions = [data.get('instruction') for data in batch]
+
+            outputs = evaluate(instructions)
+
+            for data, output in zip(batch, outputs):
+                label = data.get('answer')
+                flag = False
+                predict = extract_answer(args, output)
+                if label == predict:
+                    correct += 1
+                    flag = True
+                new_data = copy.deepcopy(data)
+                new_data['output_pred'] = output
+                new_data['pred'] = predict
+                new_data['flag'] = flag
+                output_data.append(new_data)
+                print(data["instruction"])
+                print(output)
+                print('prediction:', predict)
+                print('label:', label)
+            print('---------------')
+            print(f'\rtest:{idx + 1}/{total} | accuracy {correct}  {correct / current}')
+            print('---------------')
+            with open(f'experiment/{save_name}_{ds}.txt', 'w+') as f:
+                json.dump(output_data, f, indent=4)
+            pbar.update(1)
+        pbar.close()
+        with open(f'experiment/{save_name}_{ds}_result.txt', 'w+') as f:
+            f.write(f'\rtest:{idx + 1}/{total} | accuracy {correct}  {correct / (current)}')
+        print('\n')
+        print('test finished')
 
 
 def create_dir(dir_path):
@@ -169,8 +175,7 @@ def create_batch(dataset, batch_size):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', choices=["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa"],
-                        required=True)
+    parser.add_argument('--datasets', type=str, required=True)
     parser.add_argument('--model', choices=['LLaMA-7B', "LLaMA-13B", "LLaMA3-8B",'BLOOM-7B', 'GPT-j-6B'], required=True)
     parser.add_argument('--adapter', choices=['LoRA', 'AdapterP', 'AdapterH', 'Parallel'],
                         required=True)
