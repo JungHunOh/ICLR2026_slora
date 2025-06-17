@@ -321,10 +321,10 @@ def train():
 
     trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
 
-    #trainer.train()
-    #trainer.save_state()
+    trainer.train()
+    trainer.save_state()
 
-    #model = model.merge_and_unload()
+    model = model.merge_and_unload()
 
     #model.save_pretrained(training_args.output_dir)
     #tokenizer.save_pretrained(training_args.output_dir)
