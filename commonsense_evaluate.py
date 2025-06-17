@@ -175,7 +175,7 @@ def create_batch(dataset, batch_size):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--datasets', type=str, required=True)
+    parser.add_argument('--datasets', type=lambda s: s.split(','), required=True)
     parser.add_argument('--model', choices=['LLaMA-7B', "LLaMA-13B", "LLaMA3-8B",'BLOOM-7B', 'GPT-j-6B'], required=True)
     parser.add_argument('--adapter', choices=['LoRA', 'AdapterP', 'AdapterH', 'Parallel'],
                         required=True)
