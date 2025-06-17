@@ -20,7 +20,7 @@ elif model == 'llama3':
 
 for seed in [1,2,3]:
     for r in [32]:
-        for dl, bs, epoch in [(500,16,100),(1000,16,50),(5000,16,10)]:
+        for dl, bs, epoch in [(500,32,100),(1000,32,50),(5000,32,10)]:
         #for dl, bs, epoch in [(1000,16,12),(1000,16,25),(1000,16,100)]:
             for lr in [2e-4]:
                 # os.system(f'CUDA_VISIBLE_DEVICES={gpu} python3 -m torch.distributed.launch --master_addr localhost --master_port 1231 --nproc_per_node=4 --use_env train_math.py \
@@ -53,9 +53,9 @@ for seed in [1,2,3]:
                     --data_length {dl} \
                     --bf16 True \
                     --output_dir ./trained_models/{model}_metamath{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_seed{seed}/\
-                    --per_device_train_batch_size {bs} \
+                    --per_device_train_batch_size 16 \
                     --per_device_eval_batch_size 4 \
-                    --gradient_accumulation_steps 2 \
+                    --gradient_accumulation_steps {bs // 16} \
                     --evaluation_strategy "no" \
                     --save_strategy "no" \
                     --learning_rate {lr}\
