@@ -19,10 +19,10 @@ elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
 for seed in [1,2,3]:
-    for r in [8,32,128]:
-        for dl, bs, epoch in [(32,8,10),(32,8,5),(100,8,5)]:
-        #for dl, bs, epoch in [(500,16,5),(500,8,5)]:
-            for lr in [2e-4, 1e-4]:
+    for r in [32]:
+        for dl, bs, epoch in [(500,16,100),(1000,16,50),(5000,16,10)]:
+        #for dl, bs, epoch in [(1000,16,12),(1000,16,25),(1000,16,100)]:
+            for lr in [2e-4]:
                 # os.system(f'CUDA_VISIBLE_DEVICES={gpu} python3 -m torch.distributed.launch --master_addr localhost --master_port 1231 --nproc_per_node=4 --use_env train_math.py \
                 #     --model_name_or_path {base_model}\
                 #     --data_path ft-training_set/MetaMathQA-40K.json \
@@ -56,7 +56,7 @@ for seed in [1,2,3]:
                     --output_dir ./trained_models/{model}_metamath{dl}bs{bs}epoch{epoch}_slora_r{r}_lr{lr}_seed{seed}/\
                     --per_device_train_batch_size {bs} \
                     --per_device_eval_batch_size 4 \
-                    --gradient_accumulation_steps 4 \
+                    --gradient_accumulation_steps 2 \
                     --evaluation_strategy "no" \
                     --save_strategy "no" \
                     --learning_rate {lr}\
