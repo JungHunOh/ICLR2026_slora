@@ -100,6 +100,9 @@ def gsm8k_test(model_path, data_path, start=0, end=MAX_INT, batch_size=1):
     )
     print('prompt template:', problem_prompt)
 
+    if os.path.isfile(f"experiment/{model_path.split('/')[-2]}_gsm8k.txt"):
+        exit()
+
     with open(data_path, "r+", encoding="utf8") as f:
         for idx, item in enumerate(jsonlines.Reader(f)):
             temp_instr = problem_prompt.format(instruction=item["query"])
