@@ -9,8 +9,6 @@ import fire
 
 import torch
 
-import ast
-
 sys.path.append(os.path.join(os.getcwd(), "peft/src/"))
 from peft import PeftModel
 from tqdm import tqdm
@@ -70,8 +68,6 @@ def main(
         print(outputs)
         return outputs
 
-    args.datasets = ast.literal_eval(args.datasets)
-
     tokenizer, model = load_model(args)
 
     for ds in args.datasets:
@@ -79,7 +75,7 @@ def main(
         save_file = f'experiment/{save_name}_{ds}.json'
         create_dir('experiment/')
 
-        dataset = load_data(args)
+        dataset = load_data(ds)
         batches = create_batch(dataset, args.batch_size)
         total = len(batches)
         correct = 0
@@ -95,7 +91,7 @@ def main(
             for data, output in zip(batch, outputs):
                 label = data.get('answer')
                 flag = False
-                predict = extract_answer(args, output)
+                predict = extract_answer(ds, output)
                 if label == predict:
                     correct += 1
                     flag = True
@@ -149,7 +145,7 @@ def generate_prompt(instruction, input=None):
                 """  # noqa: E501
 
 
-def load_data(args) -> list:
+def load_data(dataset) -> list:
     """
     read data from dataset file
     Args:
@@ -158,7 +154,7 @@ def load_data(args) -> list:
     Returns:
 
     """
-    file_path = f'dataset/{args.dataset}/test.json'
+    file_path = f'dataset/{dataset}/test.json'
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"can not find dataset file : {file_path}")
     json_data = json.load(open(file_path, 'r'))
@@ -271,8 +267,8 @@ def load_instruction(args) -> str:
     return instruction
 
 
-def extract_answer(args, sentence: str) -> float:
-    dataset = args.dataset
+def extract_answer(dataset, sentence: str) -> float:
+    dataset
     if dataset == 'boolq':
         sentence_ = sentence.strip()
         pred_answers = re.findall(r'true|false', sentence_)

@@ -321,14 +321,17 @@ def train():
 
     trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
 
-    trainer.train()
-    trainer.save_state()
+    #trainer.train()
+    #trainer.save_state()
 
-    model = model.merge_and_unload()
+    #model = model.merge_and_unload()
 
-    model.save_pretrained(training_args.output_dir)
-    tokenizer.save_pretrained(training_args.output_dir)
+    #model.save_pretrained(training_args.output_dir)
+    #tokenizer.save_pretrained(training_args.output_dir)
 
+    return model, tokenizer, training_args.output_dir.split('/')[-2]
 
 if __name__ == "__main__":
-    train()
+    model, tokenizer, name = train()
+    from eval_gsm8k import gsm8k_test_noargs
+    gsm8k_test_noargs(model, tokenizer, name)

@@ -21,7 +21,7 @@ elif model == 'llama3':
 for seed in [1,2,3]:
     for r in [32]:
         for dl, bs, epoch in [(500,32,100),(1000,32,50),(5000,32,10)]:
-        #for dl, bs, epoch in [(1000,16,12),(1000,16,25),(1000,16,100)]:
+        #for dl, bs, epoch in [(1000,32,12),(1000,32,25),(1000,32,100)]:
             for lr in [2e-4]:
                 # os.system(f'CUDA_VISIBLE_DEVICES={gpu} python3 -m torch.distributed.launch --master_addr localhost --master_port 1231 --nproc_per_node=4 --use_env train_math.py \
                 #     --model_name_or_path {base_model}\
@@ -71,5 +71,5 @@ for seed in [1,2,3]:
                     --lora_dropout 0\
                     ')
 
-                os.system(f'CUDA_VISIBLE_DEVICES={gpu} python eval_gsm8k.py --model ./trained_models/{model}_metamath{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_seed{seed}/ --data_file ./dataset/GSM8K_test.jsonl')
+                #os.system(f'CUDA_VISIBLE_DEVICES={gpu} python eval_gsm8k.py --model ./trained_models/{model}_metamath{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_seed{seed}/ --data_file ./dataset/GSM8K_test.jsonl')
                 #os.system(f'python eval_math.py --model ./trained_models/{model}_metamath_lora_r{r}_lr{lr}_seed{seed}/ --data_file ./dataset/MATH_test.jsonl')

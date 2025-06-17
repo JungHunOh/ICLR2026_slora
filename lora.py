@@ -25,6 +25,7 @@ elif model == 'llama':
 elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
+i=0
 for seed in [1,2,3]:
     for r in [32,128]:
         for dl, bs, epoch in [(1000,32,50),(5000,32,10), (10000,32,5)]:
