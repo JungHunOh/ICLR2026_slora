@@ -223,7 +223,8 @@ class LoraLayer(BaseTunerLayer):
         self.use_dora[adapter_name] = use_dora
 
         if sign_preserve:
-            self.initial_sign = (self.base_layer.weight >= 0).cuda()
+            pass
+            #self.initial_sign = (self.base_layer.weight >= 0).cuda()
             #self.initial_sign = torch.sign(self.base_layer.weight).to(torch.int8).cpu()
 
         # for inits that require access to the base weight, use gather_param_ctx so that the weight is gathered when using DeepSpeed

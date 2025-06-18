@@ -67,10 +67,11 @@ class SignPreservingAdamW(torch.optim.AdamW):
 
                     # LoRA effective update: ΔW = B @ A
                     delta = B @ A * scaling  # [out_features, in_features]
-                    W_eff = W + delta.to(W.dtype)
+                    W_eff = W + delta.to(W.dtype)   
 
                     # Update W: preserve original sign, adopt W_eff's magnitude
-                    same_sign = (module.initial_sign == (W_eff >= 0))
-                    
+                    #same_sign = (module.initial_sign == (W_eff >= 0))
+                    same_sign = (torch.sign(W) == torch.sign(W_eff))
+
                     W_new = torch.where(same_sign, W, W - 2 * W_eff)
                     module.base_layer.weight.data = W_new
