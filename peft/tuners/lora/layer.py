@@ -782,6 +782,16 @@ class Linear(nn.Module, LoraLayer):
                     if active_adapter not in lora_A_keys:
                         continue
 
+                    '''
+                    lora_A = self.lora_A[active_adapter].weight
+                    lora_B = self.lora_B[active_adapter].weight
+                    A_norm = torch.norm(lora_A)
+                    B_norm = torch.norm(lora_B) 
+                    if A_norm > 1:
+                        lora_A = lora_A / A_norm
+                    if B_norm > 1:
+                        lora_B = lora_B / B_norm
+                    '''
                     lora_A = self.lora_A[active_adapter]
                     lora_B = self.lora_B[active_adapter]
                     dropout = self.lora_dropout[active_adapter]
@@ -795,6 +805,7 @@ class Linear(nn.Module, LoraLayer):
                     x = self._cast_input_dtype(x, lora_A.weight.dtype)
                     if active_adapter not in self.lora_variant:  # vanilla LoRA
                         result = result + lora_B(lora_A(dropout(x))) * scaling
+                        #result = result + F.linear(F.linear(x,lora_A),lora_B) * scaling
                     else:
                         result = self.lora_variant[active_adapter].forward(
                             self,

@@ -45,6 +45,8 @@ def train(
         micro_batch_size: int = 4,
         num_epochs: int = 3,
         learning_rate: float = 3e-4,
+        wd: float = 0,
+        reg_lambda: float = 0,
         cutoff_len: int = 256,
         val_set_size: int = 2000,
         use_gradient_checkpointing: bool = False,
@@ -286,6 +288,7 @@ def train(
         model.model_parallel = True
 
     if sign_preserve:
+    #if True:
         Trainer = SignPreservingLoRATrainer
     else: 
         Trainer = transformers.Trainer
@@ -330,10 +333,12 @@ def train(
         model = torch.compile(model)
 
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
-
-    model = model.merge_and_unload()
+    
+    #import pdb; pdb.set_trace()
+    #model = model.merge_and_unload()
 
     model.save_pretrained(output_dir)
+    tokenizer.save_pretrained(output_dir)
 
     print(
         "\n If there's a warning about missing keys above, please disregard :)"

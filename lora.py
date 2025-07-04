@@ -26,10 +26,11 @@ elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
 i=0
-for seed in [1,2,3]:
-    for r in [32,128]:
-        for dl, bs, epoch in [(1000,32,50),(5000,32,10), (10000,32,5)]:
-            for lr in [2e-4]:
+r=1
+for seed in [1]:
+    for reg_lambda in [0]:
+        for dl, bs, epoch in [(1000,32,5)]:
+            for lr in [1e-4]:
                 os.system(f'CUDA_VISIBLE_DEVICES={gpu} python finetune.py --base_model {base_model} --data_path ./ft-training_set/{dataset}.json --output_dir ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_seed{seed}/ --batch_size {bs} --micro_batch_size 16 --num_epochs {epoch}   --learning_rate {lr}   --cutoff_len 256   --val_set_size 0 --eval_step 80 --save_step 80 --data_length {dl}  --adapter_name lora --lora_r {r} --lora_alpha {r*2} --seed {seed} --lora_dropout 0')
 
                 if dataset == 'commonsense_170k':
@@ -46,5 +47,5 @@ for seed in [1,2,3]:
                     model_name = 'LLaMA-7B'
                 elif model == 'llama3':
                     model_name = 'LLaMA3-8B'
-                os.system(f'CUDA_VISIBLE_DEVICES={gpu} python {eval_file} --model {model_name} --adapter LoRA --datasets {evalsets} --base_model {base_model} --lora_weights ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_seed{seed}')
+                #os.system(f'CUDA_VISIBLE_DEVICES={gpu} python {eval_file} --model {model_name} --adapter LoRA --datasets {evalsets} --base_model {base_model} --lora_weights ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_orthoreg{reg_lambda}_seed{seed}')
 

@@ -26,14 +26,7 @@ except:  # noqa: E722
     pass
 
 
-def main(
-        load_8bit: bool = False,
-        base_model: str = "",
-        lora_weights: str = "tloen/alpaca-lora-7b",
-        share_gradio: bool = False,
-):
-    args = parse_args()
-
+def eval(model, tokenizer, name):
     def evaluate(
             instructions,
             input=None,
@@ -65,18 +58,18 @@ def main(
         s = generation_output.sequences
         outputs = tokenizer.batch_decode(s, skip_special_tokens=True)
         outputs = [o.split("### Response:")[1].strip() for o in outputs]
-        print(outputs)
+        #print(outputs)
         return outputs
 
-    tokenizer, model = load_model(args)
+    #tokenizer, model = load_model(args)
 
-    for ds in args.datasets:
-        save_name=args.lora_weights.replace('./trained_models/','')
+    for ds in ["piqa"]:
+        save_name=name
         save_file = f'experiment/{save_name}_{ds}.json'
         create_dir('experiment/')
 
         dataset = load_data(ds)
-        batches = create_batch(dataset, args.batch_size)
+        batches = create_batch(dataset, 1)
         total = len(batches)
         correct = 0
         current = 0
@@ -100,10 +93,10 @@ def main(
                 new_data['pred'] = predict
                 new_data['flag'] = flag
                 output_data.append(new_data)
-                print(data["instruction"])
-                print(output)
-                print('prediction:', predict)
-                print('label:', label)
+                #print(data["instruction"])
+                #print(output)
+                #print('prediction:', predict)
+                #print('label:', label)
             print('---------------')
             print(f'\rtest:{idx + 1}/{total} | accuracy {correct}  {correct / current}')
             print('---------------')
@@ -177,7 +170,7 @@ def parse_args():
                         required=True)
     parser.add_argument('--base_model', required=True)
     parser.add_argument('--lora_weights', required=True)
-    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=100)
     parser.add_argument('--load_8bit', action='store_true', default=False)
 
     return parser.parse_args()
@@ -250,8 +243,7 @@ def load_model(args) -> tuple:
         model.config.bos_token_id = 1
         model.config.eos_token_id = 2
 
-        if not load_8bit:
-            model.half()  # seems to fix bugs for some users.
+        model.half()  # seems to fix bugs for some users.
 
         model.eval()
         if torch.__version__ >= "2" and sys.platform != "win32":

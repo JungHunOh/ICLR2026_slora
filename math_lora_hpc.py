@@ -18,44 +18,19 @@ elif model == 'llama':
 elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
-for seed in [1,2,3]:
-    for r in [32]:
-        for dl, bs, epoch in [(500,32,100),(1000,32,50),(5000,32,10)]:
-        #for dl, bs, epoch in [(1000,32,12),(1000,32,25),(1000,32,100)]:
-            for lr in [2e-4]:
-                # os.system(f'CUDA_VISIBLE_DEVICES={gpu} python3 -m torch.distributed.launch --master_addr localhost --master_port 1231 --nproc_per_node=4 --use_env train_math.py \
-                #     --model_name_or_path {base_model}\
-                #     --data_path ft-training_set/MetaMathQA-40K.json \
-                #     --data_length 10000000 \
-                #     --bf16 True \
-                #     --output_dir ./trained_models/{model}_metamath_lora_r{r}_lr{lr}_seed{seed}/\
-                #     --per_device_train_batch_size 8 \
-                #     --per_device_eval_batch_size 4 \
-                #     --gradient_accumulation_steps 4 \
-                #     --evaluation_strategy "no" \
-                #     --save_strategy "no" \
-                #     --learning_rate {lr}\
-                #     --weight_decay 0. \
-                #     --warmup_ratio 0.03 \
-                #     --logging_steps 1 \
-                #     --num_train_epochs 5 \
-                #     --lr_scheduler_type "cosine"\
-                #     --target_modules q_proj k_proj v_proj up_proj down_proj \
-                #     --lora_r {r}\
-                #     --lora_alpha {r*2}\
-                #     --seed {seed}\
-                #     --lora_dropout 0\
-                #     ')
-                
+for seed in [1]:
+    for r in [1,128]:
+        for dl, bs, epoch in [(500000,32,5)]:
+            for lr in [1e-4]:
                 os.system(f'CUDA_VISIBLE_DEVICES={gpu} python train_math.py \
                     --model_name_or_path {base_model}\
                     --data_path ft-training_set/MetaMathQA-40K.json \
                     --data_length {dl} \
                     --bf16 True \
                     --output_dir ./trained_models/{model}_metamath{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_seed{seed}/\
-                    --per_device_train_batch_size 16 \
+                    --per_device_train_batch_size 8 \
                     --per_device_eval_batch_size 4 \
-                    --gradient_accumulation_steps {bs // 16} \
+                    --gradient_accumulation_steps {bs // 8} \
                     --evaluation_strategy "no" \
                     --save_strategy "no" \
                     --learning_rate {lr}\

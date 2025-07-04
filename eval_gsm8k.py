@@ -197,7 +197,7 @@ def parse_args():
     parser.add_argument("--data_file", type=str, default='')  # data path
     parser.add_argument("--start", type=int, default=0) # start index
     parser.add_argument("--end", type=int, default=MAX_INT)  # end index
-    parser.add_argument("--batch_size", type=int, default=400)  # batch size
+    parser.add_argument("--batch_size", type=int, default=200)  # batch size
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -212,7 +212,7 @@ if __name__ == "__main__":
 
 
 
-def gsm8k_test_noargs(model, tokenizer, name, data_path='./dataset/GSM8K_test.jsonl', start=0, end=sys.maxsize, batch_size=400):
+def gsm8k_test_noargs(model, tokenizer, name, data_path='./dataset/GSM8K_test.jsonl', start=0, end=sys.maxsize, batch_size=200):
     INVALID_ANS = "[invalid]"
     gsm8k_ins = []
     gsm8k_answers = []
