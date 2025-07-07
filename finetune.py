@@ -56,7 +56,6 @@ def train(
         save_step: int = 200,
         # lora hyperparams
         lora_r: int = 8,
-        target_r: int = 8,
         lora_alpha: float = 16,
         lora_dropout: float = 0.05,
         lora_target_modules: List[str] = None,
