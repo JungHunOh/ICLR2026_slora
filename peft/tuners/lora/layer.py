@@ -186,6 +186,7 @@ class LoraLayer(BaseTunerLayer):
         use_rslora,
         use_dora: bool = False,
         sign_preserve: bool = False,
+        target_r: Optional[int] = None,
         lora_bias: bool = False,
     ):
         # collect the kwargs
@@ -212,6 +213,10 @@ class LoraLayer(BaseTunerLayer):
         self.lora_A[adapter_name] = nn.Linear(self.in_features, r, bias=False)
         self.lora_B[adapter_name] = nn.Linear(r, self.out_features, bias=lora_bias)
         self.lora_bias[adapter_name] = lora_bias
+
+        if target_r is not None:
+            self.kept_a = nn.ModuleList([nn.Parameter(torch.zeros_like(self.lora_A[adapter_name].weight), requires_grad=False) for _ in range(target_r)])
+            self.kept_b = nn.ModuleList([nn.Parameter(torch.zeros_like(self.lora_B[adapter_name].weight), requires_grad=False) for _ in range(target_r)])
 
         if use_rslora:
             self.scaling[adapter_name] = lora_alpha / math.sqrt(r)
@@ -581,6 +586,7 @@ class Linear(nn.Module, LoraLayer):
         use_rslora: bool = False,
         use_dora: bool = False,
         sign_preserve: bool = False,
+        target_r: Optional[int] = None,
         keep_lmc: bool = False,
         lora_bias: bool = False,
         **kwargs,
@@ -599,6 +605,7 @@ class Linear(nn.Module, LoraLayer):
             use_rslora=use_rslora,
             use_dora=use_dora,
             sign_preserve=sign_preserve,
+            target_r=target_r,
             lora_bias=lora_bias,
         )
         self.is_target_conv_1d_layer = is_target_conv_1d_layer

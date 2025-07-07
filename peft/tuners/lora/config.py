@@ -329,6 +329,7 @@ class LoraConfig(PeftConfig):
         metadata={"help": "List of module names or regex expression of the module names to exclude from Lora."},
     )
     lora_alpha: int = field(default=8, metadata={"help": "Lora alpha"})
+    target_r: int = field(default=None)
     lora_dropout: float = field(default=0.0, metadata={"help": "Lora dropout"})
     fan_in_fan_out: bool = field(
         default=False,

@@ -63,7 +63,7 @@ def eval(model, tokenizer, name):
 
     #tokenizer, model = load_model(args)
 
-    for ds in ["piqa"]:
+    for ds in ["ARC-Challenge"]:
         save_name=name
         save_file = f'experiment/{save_name}_{ds}.json'
         create_dir('experiment/')

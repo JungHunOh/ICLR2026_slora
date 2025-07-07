@@ -1,12 +1,14 @@
 from transformers import Trainer
 import torch
 from peft.tuners.lora.layer import LoraLayer
+import math
 
 class SignPreservingLoRATrainer(Trainer):
-    def __init__(self, reg_lambda, *args, **kwargs):
+    def __init__(self, target_r, r, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._opt_step_count = 0
-        self.reg_lambda = reg_lambda
+        self.target_r = target_r
+        self.r = r
 
     def create_optimizer_and_scheduler(self, num_training_steps: int):
         """
@@ -32,6 +34,8 @@ class SignPreservingLoRATrainer(Trainer):
 
         self.optimizer = SignPreservingAdamW(
             params,
+            num_training_steps//(self.target_r // self.r),
+            num_cycles=self.target_r // self.r,
             model=self.model,
             lr=lr,
             betas=betas,
@@ -41,8 +45,9 @@ class SignPreservingLoRATrainer(Trainer):
         )
 
         optimizer = self.optimizer
-        self.create_scheduler(num_training_steps=num_training_steps, optimizer=optimizer)
-    
+        #self.create_scheduler(num_training_steps=num_training_steps, optimizer=optimizer)
+        self.lr_scheduler = CyclicDecayWithWarmupLR(optimizer, total_steps=num_training_steps, warmup_steps=self.args.warmup_ratio * num_training_steps ,num_cycles=self.target_r // self.r)
+    '''
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
         reg_loss = 0
         num = 0
@@ -79,17 +84,39 @@ class SignPreservingLoRATrainer(Trainer):
         loss = loss + reg_loss * self.reg_lambda
 
         return (loss, outputs) if return_outputs else loss
+    '''
 
 class SignPreservingAdamW(torch.optim.AdamW):
-    def __init__(self, params, model=None, **kwargs):
+    def __init__(self, params, num_init_steps, num_cycles, model=None, **kwargs):
         super().__init__(params, **kwargs)
         self.model = model
         self._step_count = 0
+        self.num_init_steps = num_init_steps
+        self.num_cycles = num_cycles
 
     def step(self, closure=None):
         loss = super().step(closure)
         self._step_count += 1
-        # if self._step_count % 1 == 0:
+        if self._step_count % self.num_init_steps == 0 and self._step_count // self.num_init_steps < self.num_cycles:
+            for module in self.model.modules():
+                if isinstance(module, LoraLayer):
+                    W = module.base_layer.weight
+                    lora_A = module.lora_A['default'].weight
+                    lora_B = module.lora_B['default'].weight
+                    scaling = module.scaling['default']
+
+                    delta = lora_B @ lora_A * scaling
+                    W_eff = W + delta.to(W.dtype)
+
+                    module.base_layer.weight.data = W_eff
+
+                    module.kept_a[self._step_count // self.num_init_steps] = lora_A.data.clone()
+                    module.kept_b[self._step_count // self.num_init_steps] = lora_B.data.clone()
+
+                    torch.nn.init.kaiming_uniform_(module.lora_A['default'].weight, a=math.sqrt(5))
+                    torch.nn.init.zeros_(module.lora_B['default'].weight)
+                    self.state.clear()
+
         #     self.sign_preserve_fn(self.model)
         return loss
     
@@ -118,3 +145,33 @@ class SignPreservingAdamW(torch.optim.AdamW):
 
                     W_new = torch.where(same_sign, W, W - W_eff)
                     module.base_layer.weight.data = W_new
+
+
+import torch
+from torch.optim.lr_scheduler import _LRScheduler
+
+class CyclicDecayWithWarmupLR(_LRScheduler):
+    def __init__(self, optimizer, total_steps, num_cycles, warmup_steps=0, final_lr=1e-6, last_epoch=-1):
+        self.total_steps = total_steps
+        self.num_cycles = num_cycles
+        self.warmup_steps = warmup_steps
+        self.final_lr = final_lr
+        self.steps_per_cycle = (total_steps - warmup_steps) // num_cycles
+        super().__init__(optimizer, last_epoch)
+
+    def get_lr(self):
+        step = self.last_epoch
+        lrs = []
+
+        for base_lr in self.base_lrs:
+            if step < self.warmup_steps:
+                # Linear warmup
+                lr = base_lr * (step / self.warmup_steps)
+            else:
+                # Cyclic decay
+                cycle_step = (step - self.warmup_steps) % self.steps_per_cycle
+                t = cycle_step / self.steps_per_cycle  # normalized [0,1]
+                lr = self.final_lr + (base_lr - self.final_lr) * (1 - t)
+            lrs.append(lr)
+
+        return lrs

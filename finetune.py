@@ -27,6 +27,7 @@ from peft import (  # noqa: E402
 )
 from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, AutoModel  # noqa: F402
 
+import wandb
 
 def train(
         # model/data params
@@ -38,6 +39,7 @@ def train(
         keep_lmc : bool = False,
         pissa_init : bool = False,
         load_8bit : bool = False,
+        target_r: int = None,
         seed: int = 1,
         data_length: int = 1000000,
         # training hyperparams
@@ -54,6 +56,7 @@ def train(
         save_step: int = 200,
         # lora hyperparams
         lora_r: int = 8,
+        target_r: int = 8,
         lora_alpha: float = 16,
         lora_dropout: float = 0.05,
         lora_target_modules: List[str] = None,
@@ -118,6 +121,8 @@ def train(
         target_modules = ["q_proj", "k_proj", "v_proj", "fc_in", "fc_out"]
     elif 'llama' in base_model:
         target_modules = ["q_proj", "k_proj", "v_proj", "up_proj", "down_proj"]
+
+    wandb.init(mode="disabled")
 
     random.seed(seed)
     np.random.seed(seed)
@@ -232,6 +237,7 @@ def train(
         task_type=TaskType.CAUSAL_LM,
         init_lora_weights=init_lora_weights,
         sign_preserve=sign_preserve,
+        target_r=target_r,
         keep_lmc=keep_lmc,
     )
 
@@ -287,13 +293,15 @@ def train(
         model.is_parallelizable = True
         model.model_parallel = True
 
-    if sign_preserve:
-    #if True:
+    #if sign_preserve:
+    if True:
         Trainer = SignPreservingLoRATrainer
     else: 
         Trainer = transformers.Trainer
 
     trainer = Trainer(
+        target_r=target_r,
+        r=lora_r,
         model=model,
         train_dataset=train_data,
         eval_dataset=val_data,
@@ -344,6 +352,8 @@ def train(
         "\n If there's a warning about missing keys above, please disregard :)"
     )
 
+    return model, tokenizer, output_dir.split("/")[-2]
+
 
 def generate_prompt(data_point):
     # sorry about the formatting disaster gotta move fast
@@ -369,4 +379,6 @@ def generate_prompt(data_point):
 
 
 if __name__ == "__main__":
-    fire.Fire(train)
+    model, tokenizer, name = fire.Fire(train)
+    from commonsense_evaluate_func import eval
+    eval(model, tokenizer, name)

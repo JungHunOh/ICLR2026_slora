@@ -70,6 +70,7 @@ class LoRAArguments:
     pissa_init: bool = field(default=False)
     keep_lmc: bool = field(default=False)
     sign_preserve: bool = field(default=False)
+    target_r: Optional[int] = field(default=None, metadata={"help": "Target rank for LoRA layers."})
     lora_dropout: float = field(default=0.05)
     target_modules: List[str] = field(default_factory=lambda: ["q_proj", "v_proj"])
 
@@ -283,6 +284,7 @@ def train():
         init_lora_weights=init_lora_weights,
         keep_lmc=lora_args.keep_lmc,
         sign_preserve=lora_args.sign_preserve,
+        target_r=lora_args.target_r,
     )
 
     model = get_peft_model(model, config)

@@ -26,16 +26,17 @@ elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
 i=0
-r=1
 for seed in [1]:
-    for reg_lambda in [0]:
-        for dl, bs, epoch in [(1000,32,5)]:
+    for r, target_r, alpha in [(1,32,16)]:
+    #for r, target_r in [(4,128), (4,512), (8, 512)]:
+        for dl, bs, epoch in [(1000000,32,3)]:
             for lr in [1e-4]:
-                os.system(f'CUDA_VISIBLE_DEVICES={gpu} python finetune.py --base_model {base_model} --data_path ./ft-training_set/{dataset}.json --output_dir ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_seed{seed}/ --batch_size {bs} --micro_batch_size 16 --num_epochs {epoch}   --learning_rate {lr}   --cutoff_len 256   --val_set_size 0 --eval_step 80 --save_step 80 --data_length {dl}  --adapter_name lora --lora_r {r} --lora_alpha {r*2} --seed {seed} --lora_dropout 0')
+                os.system(f'CUDA_VISIBLE_DEVICES={gpu} python finetune.py --base_model {base_model} --data_path ./ft-training_set/{dataset}.json --output_dir ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_target_r{target_r}_alpha{alpha}_lr{lr}_stateclear_seed{seed}/ --batch_size {bs} --micro_batch_size 16 --num_epochs {epoch}   --learning_rate {lr}   --cutoff_len 256   --val_set_size 0 --eval_step 80 --save_step 80 --data_length {dl}  --adapter_name lora --lora_r {r} --lora_alpha {alpha} --seed {seed} --lora_dropout 0 --target_r {target_r}')
 
                 if dataset == 'commonsense_170k':
                     #evalsets = ["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa"]
-                    evalsets = "boolq,piqa,social_i_qa,winogrande,ARC-Challenge,ARC-Easy,openbookqa"
+                    #evalsets = "boolq,piqa,social_i_qa,winogrande,ARC-Challenge,ARC-Easy,openbookqa"
+                    evalsets = "ARC-Challenge"
                     eval_file = 'commonsense_evaluate.py'
                 else:
                     evalsets = 'SVAMP,AQuA,AddSub,gsm8k,MultiArith,SingleEq'
@@ -47,5 +48,5 @@ for seed in [1]:
                     model_name = 'LLaMA-7B'
                 elif model == 'llama3':
                     model_name = 'LLaMA3-8B'
-                #os.system(f'CUDA_VISIBLE_DEVICES={gpu} python {eval_file} --model {model_name} --adapter LoRA --datasets {evalsets} --base_model {base_model} --lora_weights ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_lr{lr}_orthoreg{reg_lambda}_seed{seed}')
+                #os.system(f'CUDA_VISIBLE_DEVICES={gpu} python {eval_file} --model {model_name} --adapter LoRA --datasets {evalsets} --base_model {base_model} --lora_weights ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_target_r{target_r}_lr{lr}_seed{seed}')
 
