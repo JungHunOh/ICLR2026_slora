@@ -104,14 +104,17 @@ class SignPreservingAdamW(torch.optim.AdamW):
                     lora_A = module.lora_A['default'].weight
                     lora_B = module.lora_B['default'].weight
                     scaling = module.scaling['default']
+                    r = lora_A.shape[0]
 
                     delta = lora_B @ lora_A * scaling
                     W_eff = W + delta.to(W.dtype)
 
                     module.base_layer.weight.data = W_eff
 
-                    module.kept_a[self._step_count // self.num_init_steps] = lora_A.data.clone()
-                    module.kept_b[self._step_count // self.num_init_steps] = lora_B.data.clone()
+                    tmp = int(self._step_count // self.num_init_steps)
+
+                    module.lora_kept_a['default'].weight.data[r*(tmp-1):r*tmp] = lora_A.data.clone()
+                    module.lora_kept_b['default'].weight.data[:,r*(tmp-1):r*tmp] = lora_B.data.clone()
 
                     torch.nn.init.kaiming_uniform_(module.lora_A['default'].weight, a=math.sqrt(5))
                     torch.nn.init.zeros_(module.lora_B['default'].weight)

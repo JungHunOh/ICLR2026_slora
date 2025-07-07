@@ -67,10 +67,10 @@ class DataArguments:
 class LoRAArguments:
     lora_r: int = field(default=None, metadata={"help": "Rank of the low-rank decomposition."})
     lora_alpha: float = field(default=None)
+    target_r: float = field(default=None)
     pissa_init: bool = field(default=False)
     keep_lmc: bool = field(default=False)
     sign_preserve: bool = field(default=False)
-    target_r: Optional[int] = field(default=None, metadata={"help": "Target rank for LoRA layers."})
     lora_dropout: float = field(default=0.05)
     target_modules: List[str] = field(default_factory=lambda: ["q_proj", "v_proj"])
 
@@ -314,13 +314,13 @@ def train():
     
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
 
-    if lora_args.sign_preserve:
-    #if False:
+    #if lora_args.sign_preserve:
+    if True:
         Trainer = SignPreservingLoRATrainer
     else: 
         Trainer = transformers.Trainer
 
-    trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
+    trainer = Trainer(target_r=lora_args.target_r, r=lora_args.lora_r, model=model, tokenizer=tokenizer, args=training_args, **data_module)
 
     trainer.train()
     trainer.save_state()
@@ -334,5 +334,5 @@ def train():
 
 if __name__ == "__main__":
     model, tokenizer, name = train()
-    #from eval_gsm8k import gsm8k_test_noargs
-    #gsm8k_test_noargs(model, tokenizer, name)
+    from eval_gsm8k import gsm8k_test_noargs
+    gsm8k_test_noargs(model, tokenizer, name)

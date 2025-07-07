@@ -93,6 +93,8 @@ class LoraLayer(BaseTunerLayer):
         self.lora_dropout = nn.ModuleDict({})
         self.lora_A = nn.ModuleDict({})
         self.lora_B = nn.ModuleDict({})
+        self.lora_kept_a = nn.ModuleDict({})
+        self.lora_kept_b = nn.ModuleDict({})
         # For Embedding layer
         self.lora_embedding_A = nn.ParameterDict({})
         self.lora_embedding_B = nn.ParameterDict({})
@@ -215,8 +217,11 @@ class LoraLayer(BaseTunerLayer):
         self.lora_bias[adapter_name] = lora_bias
 
         if target_r is not None:
-            self.kept_a = nn.ModuleList([nn.Parameter(torch.zeros_like(self.lora_A[adapter_name].weight), requires_grad=False) for _ in range(target_r)])
-            self.kept_b = nn.ModuleList([nn.Parameter(torch.zeros_like(self.lora_B[adapter_name].weight), requires_grad=False) for _ in range(target_r)])
+            self.lora_kept_a[adapter_name] = nn.Linear(self.in_features, int(target_r), bias=False)
+            self.lora_kept_b[adapter_name] = nn.Linear(int(target_r), self.out_features, bias=lora_bias)
+
+            nn.init.zeros_(self.lora_kept_a[adapter_name].weight)
+            nn.init.zeros_(self.lora_kept_b[adapter_name].weight)
 
         if use_rslora:
             self.scaling[adapter_name] = lora_alpha / math.sqrt(r)
