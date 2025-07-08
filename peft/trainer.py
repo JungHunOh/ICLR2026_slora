@@ -34,7 +34,7 @@ class SignPreservingLoRATrainer(Trainer):
 
         self.optimizer = SignPreservingAdamW(
             params,
-            num_training_steps//(self.target_r // self.r),
+            num_training_steps//10//(self.target_r // self.r),
             num_cycles=self.target_r // self.r,
             model=self.model,
             lr=lr,
@@ -45,8 +45,8 @@ class SignPreservingLoRATrainer(Trainer):
         )
 
         optimizer = self.optimizer
-        #self.create_scheduler(num_training_steps=num_training_steps, optimizer=optimizer)
-        self.lr_scheduler = CyclicDecayWithWarmupLR(optimizer, total_steps=num_training_steps, warmup_steps=self.args.warmup_ratio * num_training_steps ,num_cycles=self.target_r // self.r)
+        self.create_scheduler(num_training_steps=num_training_steps, optimizer=optimizer)
+        #self.lr_scheduler = CyclicDecayWithWarmupLR(optimizer, total_steps=num_training_steps, warmup_steps=self.args.warmup_ratio * num_training_steps ,num_cycles=self.target_r // self.r)
     '''
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
         reg_loss = 0
@@ -91,7 +91,7 @@ class SignPreservingAdamW(torch.optim.AdamW):
         super().__init__(params, **kwargs)
         self.model = model
         self._step_count = 0
-        self.num_init_steps = num_init_steps
+        self.num_init_steps = int(num_init_steps)
         self.num_cycles = num_cycles
 
     def step(self, closure=None):
@@ -122,6 +122,7 @@ class SignPreservingAdamW(torch.optim.AdamW):
 
         #     self.sign_preserve_fn(self.model)
         return loss
+    
     
     def sign_preserve_fn(self, model):
         with torch.no_grad():
