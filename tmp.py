@@ -19,7 +19,7 @@ r = 1
 pr = 0
 
 #name = f'trained_models/llama3_commonsense_170k_dl1000bs32epoch5_lora_r{r}_lr0.0001_seed1'
-name = f'trained_models/llama3_metamath500bs32epoch5_lora_r{r}_lr0.0001_seed1'
+name = f'trained_models/llama3_metamath500000bs32epoch3_lora_r1_target_r64_alpha16_lr0.0001_stateclear_seed1'
 
 tokenizer = AutoTokenizer.from_pretrained(name)
 
@@ -53,6 +53,7 @@ align = 0
 num = 0
 origin = 0
 used = 0
+p=0.9
 for m in model.modules():
     if hasattr(m, 'lora_A'):
         i += 1
@@ -60,10 +61,22 @@ for m in model.modules():
         weight = m.base_layer.weight.to(torch.float32)
         a = m.lora_A['default'].weight.clone()
         b = m.lora_B['default'].weight.clone()
+        r = a.shape[0]
+
+        kept_a = m.lora_kept_a['default'].weight.clone()
+        kept_b = m.lora_kept_b['default'].weight.clone()
+
+        kept_a[-1:] = a
+        kept_b[:,-1:] = b
+
+        kept_a = kept_a[:32]
+        kept_b = kept_b[:,:32]
+
+        weight = weight.data + (kept_b @ kept_a) * scale + (b @ a) * scale
 
         # ba = b@a
         # weight = weight.data + ba * scale
-        # m.base_layer.weight.data = weight.to(torch.float16)
+        m.base_layer.weight.data = weight.to(torch.float16)
         torch.nn.init.zeros_(m.lora_A['default'].weight)
         torch.nn.init.zeros_(m.lora_B['default'].weight)
         
@@ -138,7 +151,7 @@ for m in model.modules():
 
 if 'metamath' in name:
     from eval_gsm8k import gsm8k_test_noargs
-    gsm8k_test_noargs(model, tokenizer, 'modified_c')
+    gsm8k_test_noargs(model, tokenizer, 'modified_c', end=300)
 else:
     from commonsense_evaluate_func import eval
     eval(model, tokenizer, 'modified_c')

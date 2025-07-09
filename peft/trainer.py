@@ -4,11 +4,12 @@ from peft.tuners.lora.layer import LoraLayer
 import math
 
 class SignPreservingLoRATrainer(Trainer):
-    def __init__(self, target_r, r, *args, **kwargs):
+    def __init__(self, target_r, r, epoch_p, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._opt_step_count = 0
         self.target_r = target_r
         self.r = r
+        self.epoch_p = epoch_p
 
     def create_optimizer_and_scheduler(self, num_training_steps: int):
         """
@@ -34,7 +35,7 @@ class SignPreservingLoRATrainer(Trainer):
 
         self.optimizer = SignPreservingAdamW(
             params,
-            num_training_steps//10//(self.target_r // self.r),
+            num_training_steps//self.epoch_p//(self.target_r // self.r),
             num_cycles=self.target_r // self.r,
             model=self.model,
             lr=lr,

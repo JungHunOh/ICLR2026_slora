@@ -40,6 +40,7 @@ def train(
         pissa_init : bool = False,
         load_8bit : bool = False,
         target_r: int = None,
+        epoch_p: int = None,
         seed: int = 1,
         data_length: int = 1000000,
         # training hyperparams
@@ -301,6 +302,7 @@ def train(
     trainer = Trainer(
         target_r=target_r,
         r=lora_r,
+        epoch_p=epoch_p,
         model=model,
         train_dataset=train_data,
         eval_dataset=val_data,

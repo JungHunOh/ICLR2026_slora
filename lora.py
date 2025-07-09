@@ -27,11 +27,11 @@ elif model == 'llama3':
 
 i=0
 for seed in [1]:
-    for r, target_r, alpha in [(1,32,16)]:
+    for r, target_r, alpha, epoch_p in [(1,64,16,20),(1,64,16,30)]:
     #for r, target_r in [(4,128), (4,512), (8, 512)]:
         for dl, bs, epoch in [(1000000,32,3)]:
             for lr in [1e-4]:
-                os.system(f'CUDA_VISIBLE_DEVICES={gpu} python finetune.py --base_model {base_model} --data_path ./ft-training_set/{dataset}.json --output_dir ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_target_r{target_r}_alpha{alpha}_lr{lr}_stateclear_seed{seed}/ --batch_size {bs} --micro_batch_size 16 --num_epochs {epoch}   --learning_rate {lr}   --cutoff_len 256   --val_set_size 0 --eval_step 80 --save_step 80 --data_length {dl}  --adapter_name lora --lora_r {r} --lora_alpha {alpha} --seed {seed} --lora_dropout 0 --target_r {target_r}')
+                os.system(f'CUDA_VISIBLE_DEVICES={gpu} python finetune.py --base_model {base_model} --data_path ./ft-training_set/{dataset}.json --output_dir ./trained_models/{model}_{dataset}_dl{dl}bs{bs}epoch{epoch}_lora_r{r}_target_r{target_r}_alpha{alpha}_lr{lr}_epoch{epoch_p}_seed{seed}/ --batch_size {bs} --micro_batch_size 16 --num_epochs {epoch}   --learning_rate {lr}   --cutoff_len 256   --val_set_size 0 --eval_step 80 --save_step 80 --data_length {dl}  --adapter_name lora --lora_r {r} --lora_alpha {alpha} --seed {seed} --lora_dropout 0 --target_r {target_r} --epoch_p {epoch_p}')
 
                 if dataset == 'commonsense_170k':
                     #evalsets = ["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa"]
