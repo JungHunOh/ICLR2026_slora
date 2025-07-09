@@ -18,15 +18,16 @@ elif model == 'llama':
 elif model == 'llama3':
     base_model = 'meta-llama/Meta-Llama-3-8B'
 
+lr = 1e-4
 for seed in [1]:
-    for r in [32]:
-        for lr in [2e-4]:
-            os.system(f'CUDA_VISIBLE_DEVICES={gpu} python3 -m torch.distributed.launch --master_addr localhost --master_port 1231 --nproc_per_node=4 --use_env train_math.py \
+    for r, target_r, alpha, epoch_p in [(1,64,16,20),(1,64,16,30)]:
+        for dl, bs, epoch in [(1000000,32,3)]:
+            os.system(f'CUDA_VISIBLE_DEVICES={gpu} python train_math.py \
                 --model_name_or_path {base_model}\
                 --data_path ft-training_set/MetaMathQA-40K.json \
                 --data_length 10000000 \
                 --bf16 True \
-                --output_dir ./trained_models/{model}_metamath_lora_r{r}_lr{lr}_seed{seed}/\
+                --output_dir ./trained_models/{model}_metamath{dl}bs{bs}epoch{epoch}_lora_r{r}_target_r{target_r}_alpha{alpha}_lr{lr}_epoch{epoch_p}_seed{seed}/\
                 --per_device_train_batch_size 8 \
                 --per_device_eval_batch_size 4 \
                 --gradient_accumulation_steps 4 \
@@ -36,14 +37,15 @@ for seed in [1]:
                 --weight_decay 0. \
                 --warmup_ratio 0.03 \
                 --logging_steps 1 \
-                --num_train_epochs 5 \
+                --num_train_epochs {epoch} \
                 --lr_scheduler_type "cosine"\
                 --target_modules q_proj k_proj v_proj up_proj down_proj \
                 --lora_r {r}\
-                --lora_alpha {r*2}\
+                --lora_alpha {alpha}\
                 --seed {seed}\
                 --lora_dropout 0\
+                --epoch_p {epoch_p}\
                 ')
 
-            os.system(f'CUDA_VISIBLE_DEVICES={gpu} python eval_gsm8k.py --model ./trained_models/{model}_metamath_lora_r{r}_lr{lr}_seed{seed}/ --data_file ./dataset/GSM8K_test.jsonl')
+            #os.system(f'CUDA_VISIBLE_DEVICES={gpu} python eval_gsm8k.py --model ./trained_models/{model}_metamath_lora_r{r}_lr{lr}_seed{seed}/ --data_file ./dataset/GSM8K_test.jsonl')
             #os.system(f'python eval_math.py --model ./trained_models/{model}_metamath_lora_r{r}_lr{lr}_seed{seed}/ --data_file ./dataset/MATH_test.jsonl')
