@@ -11,10 +11,18 @@ import numpy as np
 
 import random
 
+from train_math import smart_tokenizer_and_embedding_resize
+
 os.environ['CUDA_VISIBLE_DEVICES'] = input()
 
 r = 1
 pr = 0
+
+#name = f'trained_models/llama3_commonsense_170k_dl1000bs32epoch5_lora_r{r}_lr0.0001_seed1'
+name = f'trained_models/llama3_metamath500000bs32epoch3_lora_r1_lr0.0001_seed1'
+name2 = f'trained_models/llama3_metamath500000bs32epoch3_lora_r128_lr0.0001_seed1'
+
+tokenizer = AutoTokenizer.from_pretrained(name)
 
 model = AutoModelForCausalLM.from_pretrained(
     'meta-llama/Meta-Llama-3-8B',
@@ -22,9 +30,18 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto",
     trust_remote_code=True,
 ) # fix zwq
+
+if 'metamath' in name:
+    DEFAULT_PAD_TOKEN = "[PAD]"
+    smart_tokenizer_and_embedding_resize(
+                special_tokens_dict=dict(pad_token=DEFAULT_PAD_TOKEN),
+                tokenizer=tokenizer,
+                model=model,
+            )
+
 model = PeftModel.from_pretrained(
     model,
-    f'trained_models/llama3_commonsense_170k_dl1000000bs32epoch3_lora_r32_lr0.0001_seed1',
+    name,
     torch_dtype=torch.float16,
     device_map={"":0}
 )
@@ -35,17 +52,29 @@ model2 = AutoModelForCausalLM.from_pretrained(
     device_map="auto",
     trust_remote_code=True,
 ) # fix zwq
+
+if 'metamath' in name:
+    DEFAULT_PAD_TOKEN = "[PAD]"
+    smart_tokenizer_and_embedding_resize(
+                special_tokens_dict=dict(pad_token=DEFAULT_PAD_TOKEN),
+                tokenizer=tokenizer,
+                model=model2,
+            )
+
 model2 = PeftModel.from_pretrained(
     model2,
-    f'trained_models/llama3_commonsense_170k_dl1000000bs32epoch3_lora_r128_lr0.0001_seed1',
+    name2,
     torch_dtype=torch.float16,
     device_map={"":0}
 )
 
+
+tokenizer = AutoTokenizer.from_pretrained(name)
+
 i = 0
 sim = 0
 num = 0
-p = 0.2
+p = 0.5
 
 for m,m2 in zip(model.modules(), model2.modules()):
     if hasattr(m, 'lora_A'):
@@ -55,30 +84,25 @@ for m,m2 in zip(model.modules(), model2.modules()):
         a = m.lora_A['default'].weight.clone()
         b = m.lora_B['default'].weight.clone()
 
+        scale2 = m2.scaling['default']
         a2 = m2.lora_A['default'].weight.clone()
         b2 = m2.lora_B['default'].weight.clone()
 
         ba = b@a
         ba2 = b2@a2
+        print(torch.norm(ba*scale), torch.norm(ba2*scale2), torch.norm(ba*scale-ba2*scale2, p='fro'))
         p = random.uniform(0, 1)
-        weight = weight.data + (ba*p + ba2*(1-p)) * scale
+        weight = weight.data + (ba*scale*p + ba2*scale2*(1-p))
         m.base_layer.weight.data = weight.to(torch.float16)
         torch.nn.init.zeros_(m.lora_A['default'].weight)
         torch.nn.init.zeros_(m.lora_B['default'].weight)
         
-model = model.merge_and_unload()
+if 'metamath' in name:
+    from eval_gsm8k import gsm8k_test_noargs
+    gsm8k_test_noargs(model, tokenizer, 'modified_c', end=300)
+else:
+    from commonsense_evaluate_func import eval
+    eval(model, tokenizer, 'modified_c')
 
-tokenizer = AutoTokenizer.from_pretrained('meta-llama/Meta-Llama-3-8B')
-tokenizer.padding_side = "left"
-tokenizer.pad_token_id = (
-    0  # unk. we want this to be different from the eos token
-)
-
-model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
-model.config.bos_token_id = 1
-model.config.eos_token_id = 2
-
-from commonsense_evaluate_func import eval
-eval(model, tokenizer, 'modified_c')
 print(f'r{r}_pr{pr}')
 input()

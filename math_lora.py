@@ -1,5 +1,7 @@
 import os
 
+print('PID:', os.getpid())
+
 print('enter gpu')
 gpu=input()
 
@@ -20,8 +22,8 @@ elif model == 'llama3':
 
 lr = 1e-4
 for seed in [1]:
-    for r, target_r, alpha, epoch_p in [(1,64,16,20),(1,64,16,30)]:
-        for dl, bs, epoch in [(1000000,32,3)]:
+    for r, target_r, alpha, epoch_p in [(1,4,8,0.1),(1,4,16,0.1),(1,4,16,0.2),(1,64,16,0.2),(1,64,16,0.3),(1,128,16,0.4)]:
+        for dl, bs, epoch in [(1000000,32,5)]:
             os.system(f'CUDA_VISIBLE_DEVICES={gpu} python train_math.py \
                 --model_name_or_path {base_model}\
                 --data_path ft-training_set/MetaMathQA-40K.json \
@@ -45,6 +47,7 @@ for seed in [1]:
                 --seed {seed}\
                 --lora_dropout 0\
                 --epoch_p {epoch_p}\
+                --target_r {target_r}\
                 ')
 
             #os.system(f'CUDA_VISIBLE_DEVICES={gpu} python eval_gsm8k.py --model ./trained_models/{model}_metamath_lora_r{r}_lr{lr}_seed{seed}/ --data_file ./dataset/GSM8K_test.jsonl')

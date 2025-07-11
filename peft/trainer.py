@@ -35,7 +35,7 @@ class SignPreservingLoRATrainer(Trainer):
 
         self.optimizer = SignPreservingAdamW(
             params,
-            num_training_steps//self.epoch_p//(self.target_r // self.r),
+            int(num_training_steps*self.epoch_p)//(self.target_r // self.r),
             num_cycles=self.target_r // self.r,
             model=self.model,
             lr=lr,
@@ -117,6 +117,7 @@ class SignPreservingAdamW(torch.optim.AdamW):
                     module.lora_kept_a['default'].weight.data[r*(tmp-1):r*tmp] = lora_A.data.clone()
                     module.lora_kept_b['default'].weight.data[:,r*(tmp-1):r*tmp] = lora_B.data.clone()
 
+                    #module.pissa_init('default', 'pissa_niter_4')
                     torch.nn.init.kaiming_uniform_(module.lora_A['default'].weight, a=math.sqrt(5))
                     torch.nn.init.zeros_(module.lora_B['default'].weight)
                     self.state.clear()

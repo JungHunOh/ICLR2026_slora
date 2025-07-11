@@ -68,7 +68,7 @@ class LoRAArguments:
     lora_r: int = field(default=None, metadata={"help": "Rank of the low-rank decomposition."})
     lora_alpha: float = field(default=None)
     target_r: float = field(default=None)
-    epoch_p: int = field(default=None)
+    epoch_p: float = field(default=None)
     pissa_init: bool = field(default=False)
     keep_lmc: bool = field(default=False)
     sign_preserve: bool = field(default=False)
